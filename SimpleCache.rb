@@ -68,17 +68,17 @@ mem_req = 0 #Requisição da Memoria
 class CacheLine
   	  valida = 1.to_i
   	  tag    = 0.to_i
-    	ultimo_acesso = 0.to_i
-    	nrAcesso = 0.to_i
+    	  ultimo_acesso = 0.to_i
+    	  nrAcesso = 0.to_i
 #Getters and Setters
 	def setValue(value)
-					valida = value.to_i
-					return valida
+		valida = value.to_i
+		return valida
 	end
 
 	def getValue
-					valida = valida.to_i
-					return valida
+		valida = valida.to_i
+		return valida
 	end
 
 
@@ -90,25 +90,25 @@ for i in 0..numeroDeLinhasCache
 cache << CacheLine.new
 end
 #Conversao para mascara 
-	 baseTag = 0
-   baseIndex = 0
-   base = 0
-		for i in 0..tamLinhaCache
-			 baseIndex<<=1
-			 baseIndex |= 0x01
-		end
+     baseTag = 0
+     baseIndex = 0
+     base = 0
+	for i in 0..tamLinhaCache
+		 baseIndex<<=1
+		 baseIndex |= 0x01
+	end
 		
-		for i in 0..tagBits
-			  baseTag<<=1
-				baseTag|=0x01
-		end
+	for i in 0..tagBits
+		  baseTag<<=1
+		baseTag|=0x01
+	end
 	#	puts baseTag.to_s(2) #Teste do shift Left na base Binaria
 	#	baseTag <<= indexBits+ offsetBits
 	#puts baseTag
 	#	baseIndex <<= offsetBits
-		for i in 0..numeroDeLinhasCache
-		   cache[i].setValue(0)
-		end
+	for i in 0..numeroDeLinhasCache
+	   cache[i].setValue(0)
+	end
     puts "o  valor e "+ cache[i].getValue.to_s
 
 
