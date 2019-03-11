@@ -4,10 +4,6 @@
 #
 #
 #=================================================================
-#Funcao Check Linha da Cache
-def checkCasheLine()
-
-end
 
 #Funcao para converter Hexadecimal para Binario
 def HexaParaBin(input)
@@ -21,13 +17,6 @@ def HexaParaDec(input)
 		dec = input.to_i(16)
 		return dec
 end
-
-
-#Politica de LFU
-def Lfu()
-
-
-end 
 
 #Politica de LRU
 def Lru()
@@ -53,15 +42,14 @@ puts "======================================================="
 puts "Tamanho da Cache: " + Tamanho_cache.to_s 
 puts "Tamanho de Linhas da Cache: " + tamLinhaCache.to_s
 puts "Linhas por Conjunto: " + linhasConjuntoCache.to_s 
-puts "======================================================="
-puts
-
 
 #Calculo Para saber o Numero de linhas e o Tamanho do Conjunto
 numeroDeLinhasCache    = (Tamanho_cache*2**unidadedeTamanho/tamLinhaCache).to_i 
 tamanho_Conjunto_Cache = tamLinhaCache * linhasConjuntoCache
 
-
+puts "Tamanho do Conjunto da Cache: " + tamanho_Conjunto_Cache.to_s
+puts "======================================================="
+puts
 
 #Calculo de quantidade de bits dos Campos de Formato da Cache
 offsetBits = (Math.log(tamLinhaCache,2)).to_i
@@ -74,37 +62,80 @@ puts
 #Variaveis de Controle
 cache_acerto = 0 #numero de Acertos da Memoria Cache
 cache_miss = 0   #Numero de Perca da Memoria Cache
-time_stamp =0
+time_stamp = 0   #Para a Verificacao do Mais Frequentemente Utilizado
 mem_req = 0 #Requisição da Memoria
 
 class CacheLine
-   valida = 1.to_i
-   tag    = 0.to_i
-   ultimo_acesso = 0.to_i
-   nrAcesso = 0.to_i
+  	  valida = 1.to_i
+  	  tag    = 0.to_i
+    	ultimo_acesso = 0.to_i
+    	nrAcesso = 0.to_i
+#Getters and Setters
+	def setValue(value)
+					valida = value.to_i
+					return valida
+	end
+
+	def getValue
+					valida = valida.to_i
+					return valida
+	end
+
+
 end
 
+cache = []
 
+for i in 0..numeroDeLinhasCache
+cache << CacheLine.new
+end
+#Conversao para mascara 
+	 baseTag = 0
+   baseIndex = 0
+   base = 0
+		for i in 0..tamLinhaCache
+			 baseIndex<<=1
+			 baseIndex |= 0x01
+		end
+		
+		for i in 0..tagBits
+			  baseTag<<=1
+				baseTag|=0x01
+		end
+	#	puts baseTag.to_s(2) #Teste do shift Left na base Binaria
+	#	baseTag <<= indexBits+ offsetBits
+	#puts baseTag
+	#	baseIndex <<= offsetBits
+		for i in 0..numeroDeLinhasCache
+		   cache[i].setValue(0)
+		end
+    puts "o  valor e "+ cache[i].getValue.to_s
+
+
+
+#Abrindo Arquivo
 trace = File.open("trace","r")  #Le o Arquivo
 tamTrace = File.readlines("trace") #Conta o Numero de Linhas do Trace
+
+blocoCache = []
+linhaBloco = []
 
 for lines in 0..tamTrace.length-1
    mem_req += 1 
 	 check = HexaParaDec(tamTrace[lines])
 
 
+	 #Associativa por Conjunto
+	#for u in 0..tamanho_Conjunto_Cache
+	#	for j in 0..linhasConjuntoCache
+			
+	#	end
+ # end
 end
 
-   puts check
-
-if politicaDeSubs == 0 
-
-elsif politicaDeSubs == 1
-
-end
 
 puts
-puts "linhas:" + mem_req.to_s
+puts "linhas na Trace:" + mem_req.to_s
 i = gets.to_s
 puts HexaParaBin(i).to_s 
 puts HexaParaDec(i).to_s
