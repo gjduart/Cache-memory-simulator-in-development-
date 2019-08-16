@@ -1,7 +1,6 @@
 #==================================================================
 #       @Author: Gabriel Duarte
-#       Date:10/03/2019
-#
+#       
 #
 #=================================================================
 
@@ -18,11 +17,8 @@ def HexaParaDec(input)
 		return dec
 end
 
-#Politica de LRU
-def Lru()
 
 
-end
 
 puts "=============================="
 puts "Simulador de Memoria Cache"
@@ -30,87 +26,93 @@ puts "=============================="
 puts 
 
 #Valores Iniciais (a Serem substituidos por Scans)
-Tamanho_cache       = 512
+puts "Insira o Tamanho da Cache"
+tamanho_cache       = gets.to_i
 tamLinhaCache       = 16
-linhasConjuntoCache = 4
-EnderecoMemoria     = 32
+set_line						 = 4
+enderecoMemoria     = 32
 politicaDeSubs      = 0
 unidadedeTamanho    = 10
 
+
+
 #Prints
 puts "======================================================="
-puts "Tamanho da Cache: " + Tamanho_cache.to_s 
+puts "Tamanho da Cache: " + tamanho_cache.to_s 
 puts "Tamanho de Linhas da Cache: " + tamLinhaCache.to_s
-puts "Linhas por Conjunto: " + linhasConjuntoCache.to_s 
+puts "Linhas por Conjunto: " + set_line.to_s 
 
 #Calculo Para saber o Numero de linhas e o Tamanho do Conjunto
-numeroDeLinhasCache    = (Tamanho_cache*2**unidadedeTamanho/tamLinhaCache).to_i 
-tamanho_Conjunto_Cache = tamLinhaCache * linhasConjuntoCache
-
+numeroDeLinhasCache    = (tamanho_cache*2**unidadedeTamanho/tamLinhaCache).to_i 
+tamanho_Conjunto_Cache = tamLinhaCache * set_line
 puts "Tamanho do Conjunto da Cache: " + tamanho_Conjunto_Cache.to_s
 puts "======================================================="
 puts
 
 #Calculo de quantidade de bits dos Campos de Formato da Cache
 offsetBits = (Math.log(tamLinhaCache,2)).to_i
-indexBits  = (Math.log(Tamanho_cache*2**unidadedeTamanho/tamanho_Conjunto_Cache,2)).to_i
-tagBits    = EnderecoMemoria - indexBits - offsetBits
+indexBits  = (Math.log(numeroDeLinhasCache,2)).to_i
+tagBits    = enderecoMemoria - indexBits - offsetBits
+
+#Print Dos Formatos de Tag , Index e offset
 puts "Formato da Cache :"
 print "Tag: " + tagBits.to_s + " Index: " + indexBits.to_s + " offset: " + offsetBits.to_s
 puts
 
 #Variaveis de Controle
-cache_acerto = 0 #numero de Acertos da Memoria Cache
-cache_miss = 0   #Numero de Perca da Memoria Cache
-time_stamp = 0   #Para a Verificacao do Mais Frequentemente Utilizado
-mem_req = 0 #Requisição da Memoria
+hitDireto  = 0   #numero de Acertos da Memoria Cache
+missDireto = 0   #Numero de Perca da Memoria Cache
+hitAssociativoConj  = 0
+missAssociativoConj = 0
+time_stamp = 0
+mem_req = 0       #Requisição da Memoria
+
 
 class CacheLine
-  	  valida = 1.to_i
-  	  tag    = 0.to_i
-    	  ultimo_acesso = 0.to_i
-    	  nrAcesso = 0.to_i
-#Getters and Setters
-	def setValue(value)
-		valida = value.to_i
-		return valida
-	end
+  		valida = 1.to_i
+  		tag    = 0.to_i
+    	ultimo_acesso = 0.to_i
+   		nrAcesso = 0.to_i
 
-	def getValue
-		valida = valida.to_i
-		return valida
-	end
-
+		attr_reader :valida, :tag, :ultimo_acesso, :nrAcesso  
+		attr_writer :valida, :tag, :ultimo_acesso,  :nrAcesso 
 
 end
 
-cache = []
 
-for i in 0..numeroDeLinhasCache
-cache << CacheLine.new
+cache = []#Para Mapeamento DIRETO 
+b = []
+
+
+#Para Mapeamento DIRETO
+for i in 0..numeroDeLinhasCache-1
+	cache << CacheLine.new
 end
-#Conversao para mascara 
-     baseTag = 0
-     baseIndex = 0
-     base = 0
-	for i in 0..tamLinhaCache
-		 baseIndex<<=1
-		 baseIndex |= 0x01
-	end
+
+
+	 maskTag = 0
+   maskIndex = 0
+   mask = 0
+		for i in 0..indexBits-1                        # Aqui temos o inicio das nossas operacoes bit a bit
+			 maskIndex<<=1                                    
+			 maskIndex |= 0x01                                          
+		end
+
+		for i in 0..tagBits-1
+			  maskTag<<=1
+				maskTag|=0x01
+		end
+	 
+
+
+	maskTag <<= indexBits+ offsetBits
+	maskIndex <<= offsetBits
+
+
+		for i in 0..numeroDeLinhasCache-1
+			 cache[i].valida = 0
+		end
 		
-	for i in 0..tagBits
-		  baseTag<<=1
-		baseTag|=0x01
-	end
-	#	puts baseTag.to_s(2) #Teste do shift Left na base Binaria
-	#	baseTag <<= indexBits+ offsetBits
-	#puts baseTag
-	#	baseIndex <<= offsetBits
-	for i in 0..numeroDeLinhasCache
-	   cache[i].setValue(0)
-	end
-    puts "o  valor e "+ cache[i].getValue.to_s
-
 
 
 #Abrindo Arquivo
@@ -120,22 +122,34 @@ tamTrace = File.readlines("trace") #Conta o Numero de Linhas do Trace
 blocoCache = []
 linhaBloco = []
 
-for lines in 0..tamTrace.length-1
-   mem_req += 1 
-	 check = HexaParaDec(tamTrace[lines])
 
 
-	 #Associativa por Conjunto
-	#for u in 0..tamanho_Conjunto_Cache
-	#	for j in 0..linhasConjuntoCache
-			
-	#	end
- # end
+#Mapeamento DIRETO! 
+
+for lines in 0..tamTrace.length-1                          #Faz um for por todas as linhas do arquivo
+   mem_req += 1 																				   #Um pequeno Contador
+	 check = HexaParaDec(tamTrace[lines])                    #pega a String na posicao Line do Trace e Transforma pra Decimal
+	 p = (check & maskIndex.to_i) >> offsetBits              #da um and do check e da mascara e da o shift rigth para ter a index
+	
+	 if cache[p].valida == 0                                 #Verifica se o index da linha da cache e valida
+	 	    cache[p].tag = check  & maskTag.to_i               #define uma nova tag a partir do Check em hexa e da mascara da tag
+				cache[p].valida = 1                                #define que e valida
+				missDireto += 1                                    #da um cache Miss
+				
+
+	 elsif  cache[p].tag == (check & maskTag.to_i)           #Verifica se ja tem o Rotulo
+	 		  hitDireto += 1                                     #se Sim marca o Hit
+
+   else
+				cache[p].tag = (check & maskTag.to_i)              #Caso Contrario a tag e atribuida e o miss incrementado
+		    missDireto += 1
+   end
 end
 
-
+puts 
+puts 
+puts "TAXA DE HITS E MISS DO MAPEAMENTO  DIRETO: "
 puts
-puts "linhas na Trace:" + mem_req.to_s
-i = gets.to_s
-puts HexaParaBin(i).to_s 
-puts HexaParaDec(i).to_s
+puts "Cache Miss: " +format("%.2f",(((missDireto*100).to_f/mem_req))) +" %"
+puts "Cache Hit: " +format("%.2f",(((hitDireto*100)).to_f/mem_req))+" %"
+puts puts
